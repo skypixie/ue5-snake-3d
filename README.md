@@ -1,3 +1,3 @@
-# UE5Snake3D
+# Snake 3D
 
 Developed with Unreal Engine 5
