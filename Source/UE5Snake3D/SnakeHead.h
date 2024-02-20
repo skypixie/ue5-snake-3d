@@ -5,15 +5,19 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 
+#include "Interactable.h"
+
 #include "SnakeHead.generated.h"
 
 
 class UInputAction;
 class UInputMappingContext;
+class IInteractable;
+class ASnakePart;
 
 
 UCLASS()
-class UE5SNAKE3D_API ASnakeHead : public APawn
+class UE5SNAKE3D_API ASnakeHead : public APawn, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -29,6 +33,19 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* CameraComp;
+
+	UPROPERTY()
+	TArray<ASnakePart*> SnakeElements;
+
+	UPROPERTY(EditAnywhere)
+	float SnakeSpeed;
+
+	UPROPERTY(EditAnywhere)
+	float SnakeSize;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ASnakePart> SnakePartClass;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -50,4 +67,11 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void Interact(AActor* Interactor) override;
+
+	void AddSnakeElement(int ElementsNum = 1);
+
+	void Move(float DeltaTime);
+
+	FTransform GetNewElementTransform(FVector PrevMovementVector, FVector PrevLocation);
 };

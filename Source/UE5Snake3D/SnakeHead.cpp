@@ -9,6 +9,11 @@
 #include "InputAction.h"
 #include "EnhancedInputSubsystems.h"
 
+#include "SnakePart.h"
+#include "Interactable.h"
+#include "Food.h"
+
+
 // Sets default values
 ASnakeHead::ASnakeHead()
 {
@@ -28,13 +33,14 @@ ASnakeHead::ASnakeHead()
 	//Assign SpringArm class variables
 	SpringArmComp->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 50.0f), FRotator(0.0f, 0.0f, 0.0f));
 	SpringArmComp->TargetArmLength	= 200.f;
-	/*SpringArmComp->bEnableCameraLag	= true;
-	SpringArmComp->CameraLagSpeed	= 3.0f;*/
 
 	// idk it may be that i should have set it to true in Blueprints
 	SpringArmComp->bUsePawnControlRotation = true;
 	this->bUseControllerRotationPitch = true;
 	this->bUseControllerRotationYaw = true;
+
+	SnakeSpeed = 300.f;
+	SnakeSize = 100.f;
 }
 
 // Called when the game starts or when spawned
@@ -50,6 +56,13 @@ void ASnakeHead::BeginPlay()
 			Subsystem->AddMappingContext(InputMapping, 0);
 		}
 	}
+
+	// НЕ РАБОТАЕТ!!!
+	// add first element
+	//FTransform NewTransform = GetNewElementTransform(this->GetActorForwardVector(), this->GetActorLocation());
+	ASnakePart* NewSnakeElement = GetWorld()->SpawnActor<ASnakePart>(SnakePartClass, FTransform(FVector(1200, -40, 810)));
+	
+	//SnakeElements.Add(NewSnakeElement);
 }
 
 void ASnakeHead::Look(const FInputActionValue& Value)
@@ -67,6 +80,7 @@ void ASnakeHead::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	Move(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -76,4 +90,58 @@ void ASnakeHead::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	{
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASnakeHead::Look);
 	}
+}
+
+void ASnakeHead::Interact(AActor* Interactor)
+{
+	if (AFood* Food = Cast<AFood>(Interactor))
+	{
+		Food->Die();
+		this->AddSnakeElement();
+	}
+}
+
+void ASnakeHead::AddSnakeElement(int ElementsNum)
+{
+	for (int i = 0; i < ElementsNum; ++i)
+	{
+		ASnakePart* PrevElement = SnakeElements[SnakeElements.Num() - 1];
+		FTransform NewElementTransform = GetNewElementTransform(
+			PrevElement->GetActorForwardVector(),
+			PrevElement->GetActorLocation());
+		ASnakePart* NewSnakeElement = GetWorld()->SpawnActor<ASnakePart>(SnakePartClass, NewElementTransform);
+		SnakeElements.Add(NewSnakeElement);
+	}
+}
+
+void ASnakeHead::Move(float DeltaTime)
+{
+	// Move the head
+	FVector MovementVector(this->GetActorForwardVector() * SnakeSpeed * DeltaTime);
+	this->AddActorWorldOffset(MovementVector, true);
+
+	// Move the rest
+	for (int i = 0; i < SnakeElements.Num(); ++i)
+	{
+		if (i == 0)
+		{
+			FTransform NewTransform = GetNewElementTransform(
+				this->GetActorForwardVector(),
+				this->GetActorLocation());
+			ASnakePart* SnakeElem = SnakeElements[i];
+			//SnakeElem->SetActorLocation(NewTransform.GetLocation());
+		}
+	}
+}
+
+// Returns new position for the snake element
+FTransform ASnakeHead::GetNewElementTransform(FVector PrevMovementVector, FVector PrevLocation)
+{
+	float NewRelativeLocationX = PrevLocation.X + PrevMovementVector.X * SnakeSize;
+	float NewRelativeLocationY = PrevLocation.Y + PrevMovementVector.Y * SnakeSize;
+	float NewRelativeLocationZ = PrevLocation.Z + PrevMovementVector.Z * SnakeSize;
+	FVector NewRelativeLocation = FVector(NewRelativeLocationX, NewRelativeLocationY, NewRelativeLocationZ);
+
+	FVector NewLocation = PrevLocation + NewRelativeLocation;
+	return FTransform(NewLocation);
 }
