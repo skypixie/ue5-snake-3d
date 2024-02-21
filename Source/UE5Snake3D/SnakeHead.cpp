@@ -57,12 +57,12 @@ void ASnakeHead::BeginPlay()
 		}
 	}
 
-	// НЕ РАБОТАЕТ!!!
 	// add first element
-	//FTransform NewTransform = GetNewElementTransform(this->GetActorForwardVector(), this->GetActorLocation());
-	ASnakePart* NewSnakeElement = GetWorld()->SpawnActor<ASnakePart>(SnakePartClass, FTransform(FVector(1200, -40, 810)));
-	
-	//SnakeElements.Add(NewSnakeElement);
+	// НЕ РАБОТАЕТ!!!
+	FTransform NewTransform = GetNewElementTransform(this->GetActorForwardVector(), this->GetActorLocation());
+	ASnakePart* NewSnakeElement = GetWorld()->SpawnActor<ASnakePart>(SnakePartClass, NewTransform);
+	SnakeElements.Add(NewSnakeElement);
+
 }
 
 void ASnakeHead::Look(const FInputActionValue& Value)
@@ -129,7 +129,7 @@ void ASnakeHead::Move(float DeltaTime)
 				this->GetActorForwardVector(),
 				this->GetActorLocation());
 			ASnakePart* SnakeElem = SnakeElements[i];
-			//SnakeElem->SetActorLocation(NewTransform.GetLocation());
+			// SnakeElem->SetActorLocation(NewTransform.GetLocation()); // crashes
 		}
 	}
 }
