@@ -1,3 +1,3 @@
 # Snake 3D
 
-Developed with Unreal Engine 5
+PAUSED FOR SOME TIME BECAUSE OF ANOTHER PROJECT
